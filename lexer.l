@@ -1,66 +1,37 @@
 %option noyywrap
 %option yylineno
 
-%x COMMENT
-%x COMMENT2
-
-DIG	[0-9]
+DIGIT [0-9]
 
 %%
 
-"var"	            { return VAR; }
+"var"       { return VAR;   }
 
-"proc"	            { return PROC; }
-"end"	            { return END; }
+"if"        { return IF;    }
+"then"      { return THEN;  }
+"else"      { return ELSE;  }
 
-"reach"             { return REACH; }
-"break"             { return BREAK; }
-"skip"              { return SKIP; }
+"=="        { return EQ;    }
+"!="        { return NEQ;   }
+"<="        { return LE;    }
+">="        { return GE;    }
+"<"         { return LT;    }
+">"         { return GT;    }
 
-"//"                { BEGIN(COMMENT); }
-"/*"                { BEGIN(COMMENT2); }
+"||"	    { return OR;    }
+"&&"	    { return AND;   }
+"!"	        { return NOT;   }
 
-"do"	            { return DO; }
-"od"	            { return OD; }
+"+"	        { return PLUS;  }
+"*"	        { return STAR;  }
+"-"	        { return MINUS; }
+"/"	        { return DIV;   }
 
-"if"	            { return IF; }
-"fi"	            { return FI; }
-
-"::"	            { return CASE; }
-"else"	            { return ELSE; }
-"->"	            { return THEN; }
-
-":="	            { return ASSIGN; }
+"func"      { return FUNC;  }
 
 
-"||"	            { return OR; }
-"&&"	            { return AND; }
-"!"	                { return NOT; }
+{DIGIT}+	{ yylval.n = atoi(yytext); return INT; }
 
-"+"	                { return PLUS; }
-"*"	                { return TIME; }
-"-"	                { return MINUS; }
-"/"	                { return DIV; }
-
-"=="			{ return EQ; }
-"<"	                { return LT; }
-"<="	            { return LE; }
-">"	                { return GT; }
-">="	            { return GE; }
-
-<COMMENT>.          { }
-<COMMENT>\n         { BEGIN(INITIAL); }
-<COMMENT2>.         { }
-<COMMENT2>\n        { }
-<COMMENT2>"*/"      { BEGIN(INITIAL); }
-
-{DIG}+	            { yylval.n = atoi(yytext); return INT; }
-
-[a-z_][a-z0-9_]*    { yylval.s = strdup(yytext); return IDENT; }
-
-[	 \n]            { /* ignore */ }
-
-.	                { return *yytext; }
+[a-zA-Z_][a-zA-Z0-9_]*    { yylval.s = strdup(yytext); return IDENT; }
 
 %%
-
