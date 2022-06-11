@@ -11,6 +11,7 @@ DIGIT [0-9]
 "then"      { return THEN;  }
 "else"      { return ELSE;  }
 
+"="         { return ASSIGN; }
 "=="        { return EQ;    }
 "!="        { return NEQ;   }
 "<="        { return LE;    }
