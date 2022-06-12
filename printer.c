@@ -8,7 +8,7 @@ void print_iexpr(iexpr *i);
 void print_expr(expr *e);
 
 void print_prgm(prgm *p) {
-    print_decl(p->s);
+    print_expr(p->s);
 }
 
 void print_decl(decl *d) {
@@ -18,6 +18,10 @@ void print_decl(decl *d) {
 
 void print_expr(expr *e) {
     print_iexpr(e->i);
+}
+
+void print_sexpr(sexpr *s) {
+    printf("var %s : %s = ", s->name);
 }
 
 void print_iexpr(iexpr *i) {
