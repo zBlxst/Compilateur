@@ -35,6 +35,6 @@ DIGIT [0-9]
 {DIGIT}+	{ yylval.n = atoi(yytext); return INT; }
 
 [a-zA-Z_][a-zA-Z0-9_]*    { yylval.s = strdup(yytext); return IDENT; }
-[\"][a-zA-Z_][a-zA-Z0-9_]*[\"]  { yylval.s = strdup(yytext); return STRING; }
+[a-zA-Z_][a-zA-Z0-9_]*  { yylval.s = strdup(yytext); return STRING; }
 
 %%
