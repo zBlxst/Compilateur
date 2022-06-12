@@ -2,6 +2,8 @@
 #define PRINTER_INCLUDED
 #include "types.c"
 
+void print_indent(int indent);
+
 void print_prgm(prgm *p);
 void print_block(block *bl, int indent);
 void print_decl(decl *d);
