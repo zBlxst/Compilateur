@@ -116,7 +116,7 @@ iexpr : IDENT                               { $$ = make_iexpr(IDENT, $1, NULL, N
 
 sexpr : IDENT
     | sexpr PLUS sexpr 						{ $$ = make_sexpr(IDENT, $1, NULL, NULL, 0);}
-    | STRING                                { $$ = make_sexpr(STRING, NULL, NULL, $1);  }
+    | STRING                                { $$ = make_sexpr(STRING, NULL, NULL, NULL, $1);  }
 
 %%
 
