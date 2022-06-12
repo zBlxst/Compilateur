@@ -1,4 +1,9 @@
-var a : fkzep = 5 + 5;
-var b : fjzoierjg = "fjopz";
-b = 6; 
-c = 2;
+{
+    var a : fkzep = 5 + 5;
+    {
+        jdpezjze = koeke;
+    }
+    var b : fjzoierjg = "fjopz";
+    b = 6; 
+    c = 2;
+}

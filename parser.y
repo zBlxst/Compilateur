@@ -38,9 +38,9 @@ sexpr* make_sexpr(int type, sexpr *left, sexpr *right, char *value) {
     return s;
 }
 
-prgm* make_prgm (instrlist *insli) {
+prgm* make_prgm (block *bl) {
     prgm *p = malloc(sizeof(prgm));
-    p->insli = insli;
+    p->bl = bl;
     return p;
 }
 
@@ -61,6 +61,13 @@ expr* make_expr(int type, var *v, iexpr *i, sexpr *s) {
     return e;
 }
 
+block* make_block(int type, instrlist *insli) {
+    block *b = malloc(sizeof(block));
+    b->type = type;
+    b->insli = insli;
+    return b;
+}
+
 var* make_var(char *name) {
     var *v = malloc(sizeof(var));
     v->name = name;
@@ -74,12 +81,13 @@ lvalue* make_lvalue(int type, var *v) {
     return l;
 }
 
-instr* make_instr(int type, lvalue *l, expr *e, decl *d) {
+instr* make_instr(int type, lvalue *l, expr *e, decl *d, block *bl) {
     instr *ins = malloc(sizeof(instr));
     ins->type = type;
     ins->lval = l;
     ins->e = e;
     ins->d = d;
+    ins->bl = bl;
     return ins;
 }
 
@@ -109,6 +117,7 @@ instrlist* make_instrlist(instr *ins, instrlist *next) {
     instr *ins;
     instrlist *insli;
     sexpr *se;
+    block *bl;
 
 
     // ...
@@ -123,10 +132,11 @@ instrlist* make_instrlist(instr *ins, instrlist *next) {
 %type <ins> instr
 %type <insli> instrlist
 %type <se> sexpr
+%type <bl> block
 
 
-%token IEXPR SEXPR DECL // Pour faire des constantes de préprocesseur pour les int type
-%token VAR IF THEN ELSE ASSIGN EQ NEQ LE LT GE GT LPARENT RPARENT DOUBLEPOINT OR AND NOT PLUS STAR MINUS DIV FUNC SEMICOLON SKIP
+%token IEXPR SEXPR DECL INSTR BLOCK // Pour faire des constantes de préprocesseur pour les int type
+%token VAR IF THEN ELSE ASSIGN EQ NEQ LE LT GE GT LPARENT RPARENT LBRACK RBRACK DOUBLEPOINT OR AND NOT PLUS STAR MINUS DIV FUNC SEMICOLON SKIP
 %token <n> INT
 %token <s> IDENT
 %token <str> STRING
@@ -141,19 +151,22 @@ instrlist* make_instrlist(instr *ins, instrlist *next) {
 
 %%
 
-prgm : instrlist                                 { program = make_prgm($1);                    }
+prgm : block                                 { program = make_prgm($1);                    }
 
 decl : VAR IDENT DOUBLEPOINT IDENT ASSIGN expr { $$ = make_decl($2,$4,$6);                 }
 
-instrlist :                                    { instr *skip = make_instr(SKIP, NULL, NULL, NULL); $$ = make_instrlist(skip, NULL); }
+instrlist :                                    { instr *skip = make_instr(SKIP, NULL, NULL, NULL, NULL); $$ = make_instrlist(skip, NULL); }
     | instr instrlist                      { $$ = make_instrlist($1, $2);                 }
 
-instr : lvalue ASSIGN expr SEMICOLON        { $$ = make_instr(ASSIGN, $1, $3, NULL);             }
-    | decl SEMICOLON                        { $$ = make_instr(DECL, NULL, NULL, $1);      }
+instr : block                               { $$ = make_instr(BLOCK, NULL, NULL, NULL, $1); }
+    | lvalue ASSIGN expr SEMICOLON          { $$ = make_instr(ASSIGN, $1, $3, NULL, NULL);             }
+    | decl SEMICOLON                        { $$ = make_instr(DECL, NULL, NULL, $1, NULL);      }
 
 lvalue : var                                { $$ = make_lvalue(VAR, $1);                  }
 
 var : IDENT                                 { $$ = make_var($1);                           }
+
+block : LBRACK instrlist RBRACK             { $$ = make_block(INSTR, $2);            }
 
 expr : var                                  { $$ = make_expr(VAR, $1, NULL, NULL);               }
     | iexpr                                 { $$ = make_expr(IEXPR, NULL, $1, NULL);               }

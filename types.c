@@ -1,6 +1,9 @@
 #ifndef TYPES_INCLUDED
 #define TYPES_INCLUDED
 
+typedef struct prgm {
+    struct block *bl;
+} prgm;
 
 typedef struct var {
     char *name;
@@ -11,21 +14,30 @@ typedef struct lvalue {
     struct var *v;
 } lvalue;
 
-typedef struct prgm {
-    struct instrlist *insli;
-} prgm;
+typedef struct block {
+    int type; // INSTR, CLASS
+    struct instrlist *insli; 
+} block;
+
 
 typedef struct instr {
-    int type; // ASSIGN, DECL, SKIP
+    int type; // ASSIGN, DECL, BLOCK, SKIP
     struct lvalue *lval;
     struct expr *e;
     struct decl *d;
+    struct block *bl;
 } instr;
 
 typedef struct instrlist {
     struct instr *ins;
     struct instrlist *next;
 } instrlist;
+
+typedef struct decl {
+    char *name;
+    char *type;
+    struct expr *init;
+} decl;
 
 typedef struct expr {
     int type; // VAR, IEXPR, SEXPR
@@ -49,11 +61,6 @@ typedef struct sexpr {
     char *value;
 } sexpr;
 
-typedef struct decl {
-    char *name;
-    char *type;
-    struct expr *init;
-} decl;
 
 #endif
 

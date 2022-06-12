@@ -30,6 +30,9 @@ DIGIT [0-9]
 "("         { return LPARENT; }
 ")"         { return RPARENT; }
 
+"{"         { return LBRACK;  }
+"}"         { return RBRACK;  }
+
 "+"	        { return PLUS;  }
 "*"	        { return STAR;  }
 "-"	        { return MINUS; }
