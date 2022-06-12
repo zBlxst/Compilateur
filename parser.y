@@ -32,9 +32,19 @@ iexpr* make_iexpr (int type, char *name, iexpr *left, iexpr *right, int value) {
     return i;
 }
 
-prgm* make_prgm (decl *d) {
+sexpr* make_sexpr(int type, char *name, sexpr *left, sexpr *right, char *value) {
+    sexpr *s = malloc(sizeof(sexpr));
+    s->type = type;
+    s->name = name;
+    s->left = left;
+    s->right = right;
+    s->value = value;
+    return s;
+}
+
+prgm* make_prgm (sexpr *s) {
     prgm *p = malloc(sizeof(prgm));
-    p->d = d;
+    p->s = s;
     return p;
 }
 
@@ -60,12 +70,13 @@ expr* make_expr(iexpr *i) {
 
 %union {
     char *s;
+    char *str;
     int n;
     iexpr *i;
+    sexpr *se;
     expr *e;
     prgm *p;
     decl *d;
-
     // ...
 }
 
@@ -73,11 +84,12 @@ expr* make_expr(iexpr *i) {
 %type <p> prgm
 %type <d> decl;
 %type <e> expr;
-
+%type <se> sexpr;
 
 %token VAR IF THEN ELSE ASSIGN EQ NEQ LE LT GE GT DOUBLEPOINT OR AND NOT PLUS STAR MINUS DIV FUNC
 %token <n> INT
 %token <s> IDENT
+%token <str> STRING
 
 %left ';'
 %left ','
@@ -89,7 +101,7 @@ expr* make_expr(iexpr *i) {
 
 %%
 
-prgm : decl                                { program = make_prgm($1);                     }
+prgm : sexpr                                { program = make_prgm($1);                     }
 
 decl : VAR IDENT DOUBLEPOINT IDENT ASSIGN expr { $$ = make_decl($2,$4,$6);}
 
@@ -102,7 +114,9 @@ iexpr : IDENT                               { $$ = make_iexpr(IDENT, $1, NULL, N
     | iexpr DIV iexpr                       { $$ = make_iexpr(DIV, NULL, $1, $3, 0);       }
     | INT                                   { $$ = make_iexpr(INT, NULL, NULL, NULL, $1);  }
 
-
+sexpr : IDENT
+    | sexpr PLUS sexpr 						{ $$ = make_sexpr(IDENT, $1, NULL, NULL, 0);}
+    | STRING                                { $$ = make_sexpr(STRING, NULL, NULL, $1);  }
 
 %%
 

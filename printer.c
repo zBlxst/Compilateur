@@ -8,7 +8,7 @@ void print_iexpr(iexpr *i);
 void print_expr(expr *e);
 
 void print_prgm(prgm *p) {
-    print_decl(p->d);
+    print_decl(p->s);
 }
 
 void print_decl(decl *d) {

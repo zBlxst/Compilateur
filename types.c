@@ -13,8 +13,16 @@ typedef struct iexpr {
     int value;
 } iexpr;
 
+typedef struct sexpr {
+    int type; // IDENT, PLUS
+    char *name; 
+    struct sexpr *left;
+    struct sexpr *right;
+    char *value;
+} sexpr;
+
 typedef struct prgm {
-    struct decl *d;
+    struct sexpr *s;
 } prgm;
 
 typedef struct expr {
