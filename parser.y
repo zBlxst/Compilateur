@@ -34,7 +34,7 @@ iexpr* make_iexpr (int type, char *name, iexpr *left, iexpr *right, int value) {
 
 prgm* make_prgm (decl *d) {
     prgm *p = malloc(sizeof(prgm));
-    p->i = i;
+    p->d = d;
     return p;
 }
 
