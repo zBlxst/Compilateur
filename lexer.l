@@ -11,6 +11,8 @@ DIGIT [0-9]
 "then"      { return THEN;  }
 "else"      { return ELSE;  }
 
+"skip"      { return SKIP;  }
+
 "="         { return ASSIGN; }
 "=="        { return EQ;    }
 "!="        { return NEQ;   }
@@ -19,10 +21,14 @@ DIGIT [0-9]
 "<"         { return LT;    }
 ">"         { return GT;    }
 ":"         { return DOUBLEPOINT;    }
+";"         { return SEMICOLON;      }
 
 "||"	    { return OR;    }
 "&&"	    { return AND;   }
 "!"	        { return NOT;   }
+
+"("         { return LPARENT; }
+")"         { return RPARENT; }
 
 "+"	        { return PLUS;  }
 "*"	        { return STAR;  }
@@ -35,6 +41,9 @@ DIGIT [0-9]
 {DIGIT}+	{ yylval.n = atoi(yytext); return INT; }
 
 [a-zA-Z_][a-zA-Z0-9_]*    { yylval.s = strdup(yytext); return IDENT; }
-[\"][a-zA-Z_][a-zA-Z0-9_]*[\"]  { yylval.s = strdup(yytext); return STRING; }
+[\"][a-zA-Z0-9_][a-zA-Z0-9_]*[\"]  { yylval.s = strdup(yytext); return STRING; }
+
+[ \t\n\r]            {}
+
 
 %%

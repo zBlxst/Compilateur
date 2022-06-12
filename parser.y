@@ -6,9 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef TYPES_INCLUDED
 #include "types.c"
-#endif
 
 
 int yylex();
@@ -22,29 +20,27 @@ prgm *program;
 Functions to instanciate data structures
 */
 
-iexpr* make_iexpr (int type, char *name, iexpr *left, iexpr *right, int value) {
+iexpr* make_iexpr (int type, iexpr *left, iexpr *right, int value) {
     iexpr *i = malloc(sizeof(iexpr));
     i->type = type;
-    i->name = name;
     i->left = left;
     i->right = right;
     i->value = value;
     return i;
 }
 
-sexpr* make_sexpr(int type, char *name, sexpr *left, sexpr *right, char *value) {
+sexpr* make_sexpr(int type, sexpr *left, sexpr *right, char *value) {
     sexpr *s = malloc(sizeof(sexpr));
     s->type = type;
-    s->name = name;
     s->left = left;
     s->right = right;
     s->value = value;
     return s;
 }
 
-prgm* make_prgm (sexpr *s) {
+prgm* make_prgm (instrlist *insli) {
     prgm *p = malloc(sizeof(prgm));
-    p->s = s;
+    p->insli = insli;
     return p;
 }
 
@@ -56,10 +52,42 @@ decl* make_decl(char *name, char *type, expr *e){
     return d;
 }
 
-expr* make_expr(iexpr *i) {
+expr* make_expr(int type, var *v, iexpr *i, sexpr *s) {
     expr *e = malloc(sizeof(expr));
+    e->type = type;
+    e->v = v;
     e->i = i;
+    e->s = s;
     return e;
+}
+
+var* make_var(char *name) {
+    var *v = malloc(sizeof(var));
+    v->name = name;
+    return v;
+}
+
+lvalue* make_lvalue(int type, var *v) {
+    lvalue *l = malloc(sizeof(lvalue));
+    l->type = type;
+    l->v = v;
+    return l;
+}
+
+instr* make_instr(int type, lvalue *l, expr *e, decl *d) {
+    instr *ins = malloc(sizeof(instr));
+    ins->type = type;
+    ins->lval = l;
+    ins->e = e;
+    ins->d = d;
+    return ins;
+}
+
+instrlist* make_instrlist(instr *ins, instrlist *next) {
+    instrlist *insli = malloc(sizeof(instrlist));
+    insli->ins = ins;
+    insli->next = next;
+    return insli;
 }
 
 
@@ -73,20 +101,32 @@ expr* make_expr(iexpr *i) {
     char *str;
     int n;
     iexpr *i;
-    sexpr *se;
     expr *e;
     prgm *p;
     decl *d;
+    var *v;
+    lvalue *lval;
+    instr *ins;
+    instrlist *insli;
+    sexpr *se;
+
+
     // ...
 }
 
 %type <i> iexpr // Des trucs à mettre mais il faut comprendre avant de faire sinon on va pas comprendre
 %type <p> prgm
-%type <d> decl;
-%type <e> expr;
-%type <se> sexpr;
+%type <d> decl
+%type <e> expr
+%type <v> var
+%type <lval> lvalue
+%type <ins> instr
+%type <insli> instrlist
+%type <se> sexpr
 
-%token VAR IF THEN ELSE ASSIGN EQ NEQ LE LT GE GT DOUBLEPOINT OR AND NOT PLUS STAR MINUS DIV FUNC
+
+%token IEXPR SEXPR DECL // Pour faire des constantes de préprocesseur pour les int type
+%token VAR IF THEN ELSE ASSIGN EQ NEQ LE LT GE GT LPARENT RPARENT DOUBLEPOINT OR AND NOT PLUS STAR MINUS DIV FUNC SEMICOLON SKIP
 %token <n> INT
 %token <s> IDENT
 %token <str> STRING
@@ -101,25 +141,37 @@ expr* make_expr(iexpr *i) {
 
 %%
 
-prgm : sexpr                                { program = make_prgm($1);                     }
+prgm : instrlist                                 { program = make_prgm($1);                    }
 
-decl : VAR IDENT DOUBLEPOINT IDENT ASSIGN expr { $$ = make_decl($2,$4,$6);}
+decl : VAR IDENT DOUBLEPOINT IDENT ASSIGN expr { $$ = make_decl($2,$4,$6);                 }
 
-expr : iexpr                                { $$ = make_expr($1); }
+instrlist :                                    { instr *skip = make_instr(SKIP, NULL, NULL, NULL); $$ = make_instrlist(skip, NULL); }
+    | instr instrlist                      { $$ = make_instrlist($1, $2);                 }
 
-iexpr : IDENT                               { $$ = make_iexpr(IDENT, $1, NULL, NULL, 0);   }
-    | iexpr PLUS iexpr                      { $$ = make_iexpr(PLUS, NULL, $1, $3, 0);      }
-    | iexpr MINUS iexpr                     { $$ = make_iexpr(MINUS, NULL, $1, $3, 0);     }
-    | iexpr STAR iexpr                      { $$ = make_iexpr(STAR, NULL, $1, $3, 0);      }
-    | iexpr DIV iexpr                       { $$ = make_iexpr(DIV, NULL, $1, $3, 0);       }
-    | INT                                   { $$ = make_iexpr(INT, NULL, NULL, NULL, $1);  }
+instr : lvalue ASSIGN expr SEMICOLON        { $$ = make_instr(ASSIGN, $1, $3, NULL);             }
+    | decl SEMICOLON                        { $$ = make_instr(DECL, NULL, NULL, $1);      }
 
-sexpr : IDENT
-    | sexpr PLUS sexpr 						{ $$ = make_sexpr(PLUS, NULL, $1, $3, 0); }
-    | STRING                                { $$ = make_sexpr(STRING, NULL, NULL, NULL, $1);  }
+lvalue : var                                { $$ = make_lvalue(VAR, $1);                  }
+
+var : IDENT                                 { $$ = make_var($1);                           }
+
+expr : var                                  { $$ = make_expr(VAR, $1, NULL, NULL);               }
+    | iexpr                                 { $$ = make_expr(IEXPR, NULL, $1, NULL);               }
+    | sexpr                                 { $$ = make_expr(SEXPR, NULL, NULL, $1);             }
+
+iexpr : iexpr PLUS iexpr                    { $$ = make_iexpr(PLUS, $1, $3, 0);      }
+    | iexpr MINUS iexpr                     { $$ = make_iexpr(MINUS, $1, $3, 0);     }
+    | iexpr STAR iexpr                      { $$ = make_iexpr(STAR, $1, $3, 0);      }
+    | iexpr DIV iexpr                       { $$ = make_iexpr(DIV, $1, $3, 0);       }
+    | LPARENT iexpr RPARENT                 { $$ = make_iexpr(LPARENT, $2, NULL, 0); }
+    | INT                                   { $$ = make_iexpr(INT, NULL, NULL, $1);  }
+
+sexpr : sexpr PLUS sexpr 					{ $$ = make_sexpr(PLUS, $1, $3, 0); }
+    | STRING                                { $$ = make_sexpr(STRING, NULL, NULL, $1);  }
+
+
 
 %%
-
 
 #include "printer.c"
 #include "lexer.c"
@@ -132,15 +184,18 @@ void yyerror(char *s)
 
 
 
-
-
 ///////////////////////////////////////////////////////////
 
 int main(int argc, char **argv) {
-    if (argc <= 1) { yyerror("no file specified"); exit(1); }
+    if (argc <= 1) { 
+        yyerror("no file specified"); exit(1);
+    }
+
 	yyin = fopen(argv[1],"r");
 	if (!yyparse()) {
-		print_prgm(program);
+		printf("\n");
+        print_prgm(program);
+        printf("\n");
 	}
 	return 0;
 }
