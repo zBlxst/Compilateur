@@ -46,6 +46,12 @@ decl* make_decl(char *name, char *type, expr *e){
     return d;
 }
 
+expr* make_expr(iexpr *i) {
+    expr *e = malloc(sizeof(expr));
+    e->i = i;
+    return e;
+}
+
 
 
 
@@ -87,7 +93,7 @@ prgm : decl                                { program = make_prgm($1);           
 
 decl : VAR IDENT DOUBLEPOINT IDENT ASSIGN expr { $$ = make_decl($2,$4,$6);}
 
-expr : iexpr
+expr : iexpr                                { $$ = make_expr($1); }
 
 iexpr : IDENT                               { $$ = make_iexpr(IDENT, $1, NULL, NULL, 0);   }
     | iexpr PLUS iexpr                      { $$ = make_iexpr(PLUS, NULL, $1, $3, 0);      }
@@ -100,10 +106,8 @@ iexpr : IDENT                               { $$ = make_iexpr(IDENT, $1, NULL, N
 
 %%
 
-#ifndef PRINTER_INCLUDED
-#include "printer.c"
-#endif
 
+#include "printer.c"
 #include "lexer.c"
 
 void yyerror(char *s)

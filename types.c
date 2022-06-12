@@ -2,6 +2,7 @@
 Data structures    
 */
 
+#ifndef TYPES_INCLUDED
 #define TYPES_INCLUDED
 
 typedef struct iexpr {
@@ -25,3 +26,6 @@ typedef struct decl {
     char *type;
     struct expr *init;
 } decl;
+
+#endif
+

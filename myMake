@@ -2,3 +2,6 @@ make lexer.c
 make parser
 
 ./parser $1
+
+rm ./parser
+rm lexer.c
