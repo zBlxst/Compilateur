@@ -5,5 +5,5 @@
 #define PRINTER_INCLUDED
 
 void print_prgm (prgm *p) {
-    printf("%d\n", p->i->left->value);
+    printf("var %s : %s = ", p->d->name, p->d->type);
 }
