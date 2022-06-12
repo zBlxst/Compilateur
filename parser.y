@@ -6,25 +6,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <types.c>
+
 int yylex();
 void yyerror();
     
-/* 
-Data structures    
-*/
-
-typedef struct iexpr {
-    int type; // IDENT, PLUS, MINUS, STAR, DIV, INT
-    char *name; 
-    struct iexpr *left;
-    struct iexpr *right;
-    int value;
-} iexpr;
-
-typedef struct prgm {
-    struct iexpr *i;
-} prgm;
-
 ///////////////////////////////////////////////////////////////////
 
 prgm *program;
@@ -96,6 +82,10 @@ iexpr : IDENT                               { $$ = make_iexpr(IDENT, $1, NULL, N
 
 %%
 
+#ifndef PRINTER_INCLUDED
+#include "printer.c"
+#endif
+
 #include "lexer.c"
 
 void yyerror(char *s)
@@ -104,9 +94,6 @@ void yyerror(char *s)
 	fprintf(stderr, "Erreur ligne %d %s\n", yylineno, s);
 }
 
-void print_prgm (prgm *p) {
-    printf("%d\n", p->i->left->value);
-}
 
 
 
