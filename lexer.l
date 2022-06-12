@@ -18,6 +18,7 @@ DIGIT [0-9]
 ">="        { return GE;    }
 "<"         { return LT;    }
 ">"         { return GT;    }
+":"         { return DOUBLEPOINT;    }
 
 "||"	    { return OR;    }
 "&&"	    { return AND;   }

@@ -32,10 +32,18 @@ iexpr* make_iexpr (int type, char *name, iexpr *left, iexpr *right, int value) {
     return i;
 }
 
-prgm* make_prgm (iexpr *i) {
+prgm* make_prgm (decl *d) {
     prgm *p = malloc(sizeof(prgm));
     p->i = i;
     return p;
+}
+
+decl* make_decl(char *name, char *type, expr *e){
+    decl *d = malloc(sizeof(decl));
+    d->name = name;
+    d->type = type;
+    d->init = e;
+    return d;
 }
 
 
@@ -48,17 +56,20 @@ prgm* make_prgm (iexpr *i) {
     char *s;
     int n;
     iexpr *i;
-
+    expr *e;
     prgm *p;
+    decl *d;
 
     // ...
 }
 
 %type <i> iexpr // Des trucs à mettre mais il faut comprendre avant de faire sinon on va pas comprendre
 %type <p> prgm
+%type <d> decl;
+%type <e> expr;
 
 
-%token VAR IF THEN ELSE ASSIGN EQ NEQ LE LT GE GT OR AND NOT PLUS STAR MINUS DIV FUNC
+%token VAR IF THEN ELSE ASSIGN EQ NEQ LE LT GE GT DOUBLEPOINT OR AND NOT PLUS STAR MINUS DIV FUNC
 %token <n> INT
 %token <s> IDENT
 
@@ -72,7 +83,11 @@ prgm* make_prgm (iexpr *i) {
 
 %%
 
-prgm : iexpr                                { program = make_prgm($1);                     }
+prgm : decl                                { program = make_prgm($1);                     }
+
+decl : VAR IDENT DOUBLEPOINT IDENT ASSIGN expr { $$ = make_decl($2,$4,$6);}
+
+expr : iexpr
 
 iexpr : IDENT                               { $$ = make_iexpr(IDENT, $1, NULL, NULL, 0);   }
     | iexpr PLUS iexpr                      { $$ = make_iexpr(PLUS, NULL, $1, $3, 0);      }

@@ -13,5 +13,15 @@ typedef struct iexpr {
 } iexpr;
 
 typedef struct prgm {
-    struct iexpr *i;
+    struct decl *d;
 } prgm;
+
+typedef struct expr {
+    struct iexpr *i;
+} expr;
+
+typedef struct decl {
+    char *name;
+    char *type;
+    struct expr *init;
+} decl;
