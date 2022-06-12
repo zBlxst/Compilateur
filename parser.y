@@ -6,7 +6,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <types.c>
+#ifndef TYPES_INCLUDED
+#include "types.c"
+#endif
+
 
 int yylex();
 void yyerror();
