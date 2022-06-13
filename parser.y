@@ -20,27 +20,9 @@ prgm *program;
 Functions to instanciate data structures
 */
 
-iexpr* make_iexpr (int type, iexpr *left, iexpr *right, int value) {
-    iexpr *i = malloc(sizeof(iexpr));
-    i->type = type;
-    i->left = left;
-    i->right = right;
-    i->value = value;
-    return i;
-}
-
-sexpr* make_sexpr(int type, sexpr *left, sexpr *right, char *value) {
-    sexpr *s = malloc(sizeof(sexpr));
-    s->type = type;
-    s->left = left;
-    s->right = right;
-    s->value = value;
-    return s;
-}
-
-prgm* make_prgm (block *bl) {
+prgm* make_prgm (instr *i) {
     prgm *p = malloc(sizeof(prgm));
-    p->bl = bl;
+    p->ins = i;
     return p;
 }
 
@@ -52,12 +34,15 @@ decl* make_decl(char *name, char *type, expr *e){
     return d;
 }
 
-expr* make_expr(int type, var *v, iexpr *i, sexpr *s) {
+expr* make_expr(int type, var *v, int intValue, char *stringValue, int boolValue, expr *left, expr *right) {
     expr *e = malloc(sizeof(expr));
     e->type = type;
     e->v = v;
-    e->i = i;
-    e->s = s;
+    e->intValue = intValue;
+    e->stringValue = stringValue;
+    e->boolValue = boolValue;
+    e->left = left;
+    e->right = right;
     return e;
 }
 
@@ -81,36 +66,38 @@ lvalue* make_lvalue(int type, var *v) {
     return l;
 }
 
-instr* make_instr(int type, lvalue *l, expr *e, decl *d, block *bl, loopfor *lf) {
+assign* make_assign(lvalue *lval, expr *e) {
+    assign *a = malloc(sizeof(assign));
+    a->lval = lval;
+    a->e = e;
+    return a;
+}
+
+instr* make_instr(int type, assign *a, decl *d, block *bl, forloop *fl) {
     instr *ins = malloc(sizeof(instr));
     ins->type = type;
-    ins->lval = l;
-    ins->e = e;
+    ins->a = a;
     ins->d = d;
     ins->bl = bl;
-    if(ins->lf != NULL){
-    printf("yo");
-    }
-    ins->lf = lf;
+    ins->fl = fl;
     return ins;
 }
 
 instrlist* make_instrlist(instr *ins, instrlist *next) {
-    printf("yo");
     instrlist *insli = malloc(sizeof(instrlist));
     insli->ins = ins;
     insli->next = next;
     return insli;
 }
 
-loopfor* make_loopfor(int type, decl *d, iexpr *i, iexpr *i2, block *bl){
-    loopfor *lf = malloc(sizeof(loopfor));
-    lf->type = type;
-    lf->d = d;
-    lf->i = i;
-    lf->i2 = i2;
-    lf->bl = bl;
-    return lf;
+forloop* make_forloop(instr *init, expr *cond, instr *end, instr *ins){
+    printf("for loop\n");
+    forloop *fl = malloc(sizeof(forloop));
+    fl->init = init;
+    fl->cond = cond;
+    fl->end = end;
+    fl->ins = ins;
+    return fl;
 }
 
 
@@ -123,7 +110,6 @@ loopfor* make_loopfor(int type, decl *d, iexpr *i, iexpr *i2, block *bl){
     char *s;
     char *str;
     int n;
-    iexpr *i;
     expr *e;
     prgm *p;
     decl *d;
@@ -131,15 +117,15 @@ loopfor* make_loopfor(int type, decl *d, iexpr *i, iexpr *i2, block *bl){
     lvalue *lval;
     instr *ins;
     instrlist *insli;
-    sexpr *se;
     block *bl;
-    loopfor *lf;
+    forloop *fl;
+    assign *a;
 
 
     // ...
 }
 
-%type <i> iexpr // Des trucs à mettre mais il faut comprendre avant de faire sinon on va pas comprendre
+// Des trucs à mettre mais il faut comprendre avant de faire sinon on va pas comprendre
 %type <p> prgm
 %type <d> decl
 %type <e> expr
@@ -147,12 +133,11 @@ loopfor* make_loopfor(int type, decl *d, iexpr *i, iexpr *i2, block *bl){
 %type <lval> lvalue
 %type <ins> instr
 %type <insli> instrlist
-%type <se> sexpr
 %type <bl> block
-%type <lf> loopfor
+%type <fl> forloop
+%type <a> assign
 
-
-%token IEXPR SEXPR DECL INSTR BLOCK // Pour faire des constantes de préprocesseur pour les int type
+%token DECL INSTR BLOCK BOOL PARENTH // Pour faire des constantes de préprocesseur pour les int type
 %token VAR IF THEN ELSE ASSIGN EQ NEQ LE LT GE GT LPARENT RPARENT LBRACK RBRACK DOUBLEPOINT OR AND NOT PLUS STAR MINUS DIV FUNC FOR SEMICOLON SKIP
 %token <n> INT
 %token <s> IDENT
@@ -168,17 +153,20 @@ loopfor* make_loopfor(int type, decl *d, iexpr *i, iexpr *i2, block *bl){
 
 %%
 
-prgm : block                                 { program = make_prgm($1);                    }
+prgm : instr                                 { program = make_prgm($1);                    }
 
 decl : VAR IDENT DOUBLEPOINT IDENT ASSIGN expr { $$ = make_decl($2,$4,$6);                 }
 
-instrlist :                                    { instr *skip = make_instr(SKIP, NULL, NULL, NULL, NULL, NULL); $$ = make_instrlist(skip, NULL); }
-    | instr instrlist                      { $$ = make_instrlist($1, $2);                 }
+instrlist :                                    { instr *skip = make_instr(SKIP, NULL, NULL, NULL, NULL); $$ = make_instrlist(skip, NULL); }
+    | forloop instrlist                     {instr *ins = make_instr(FOR, NULL, NULL, NULL, $1); $$ = make_instrlist(ins, $2); }
+    | instr SEMICOLON instrlist                      { $$ = make_instrlist($1, $3);                 }
 
-instr : block                               { $$ = make_instr(BLOCK, NULL, NULL, NULL, $1,NULL); }
-    | lvalue ASSIGN expr SEMICOLON          { $$ = make_instr(ASSIGN, $1, $3, NULL, NULL,NULL);             }
-    | decl SEMICOLON                        { $$ = make_instr(DECL, NULL, NULL, $1, NULL, NULL);      }
-    | loopfor                               { $$ = make_instr(FOR,NULL,NULL,NULL,NULL,$1);}
+instr : block                               { $$ = make_instr(BLOCK, NULL, NULL, $1,NULL); }
+    | assign                                { $$ = make_instr(ASSIGN, $1, NULL, NULL,NULL);             }
+    | decl                                  { $$ = make_instr(DECL, NULL, $1, NULL, NULL);      }
+    | forloop                               { $$ = make_instr(FOR, NULL, NULL, NULL, $1);}
+
+assign :  lvalue ASSIGN expr                { $$ = make_assign($1, $3); }
 
 lvalue : var                                { $$ = make_lvalue(VAR, $1);                  }
 
@@ -186,21 +174,17 @@ var : IDENT                                 { $$ = make_var($1);                
 
 block : LBRACK instrlist RBRACK             { $$ = make_block(INSTR, $2);            }
 
-expr : var                                  { $$ = make_expr(VAR, $1, NULL, NULL);               }
-    | iexpr                                 { $$ = make_expr(IEXPR, NULL, $1, NULL);               }
-    | sexpr                                 { $$ = make_expr(SEXPR, NULL, NULL, $1);             }
+expr : var                                  { $$ = make_expr(VAR, $1, 0, NULL, 0, NULL, NULL);               }
+    | INT                                   { $$ = make_expr(INT, NULL, $1, NULL, 0, NULL, NULL);               }
+    | STRING                                { $$ = make_expr(STRING, NULL, 0, $1, 0, NULL, NULL);             } 
+    | expr PLUS expr                        { $$ = make_expr(PLUS, NULL, 0, NULL, 0, $1, $3);      }
+    | expr MINUS expr                       { $$ = make_expr(MINUS, NULL, 0, NULL, 0, $1, $3);     }
+    | expr STAR expr                        { $$ = make_expr(STAR, NULL, 0, NULL, 0, $1, $3);      }
+    | expr DIV expr                         { $$ = make_expr(DIV, NULL, 0, NULL, 0, $1, $3);       }
+    | LPARENT expr RPARENT                  { $$ = make_expr(PARENTH, NULL, 0, NULL, 0, $2, NULL); }
 
-iexpr : iexpr PLUS iexpr                    { $$ = make_iexpr(PLUS, $1, $3, 0);      }
-    | iexpr MINUS iexpr                     { $$ = make_iexpr(MINUS, $1, $3, 0);     }
-    | iexpr STAR iexpr                      { $$ = make_iexpr(STAR, $1, $3, 0);      }
-    | iexpr DIV iexpr                       { $$ = make_iexpr(DIV, $1, $3, 0);       }
-    | LPARENT iexpr RPARENT                 { $$ = make_iexpr(LPARENT, $2, NULL, 0); }
-    | INT                                   { $$ = make_iexpr(INT, NULL, NULL, $1);  }
 
-sexpr : sexpr PLUS sexpr 					{ $$ = make_sexpr(PLUS, $1, $3, 0); }
-    | STRING                                { $$ = make_sexpr(STRING, NULL, NULL, $1);  }
-
-loopfor : FOR LPARENT decl SEMICOLON iexpr SEMICOLON iexpr RPARENT block { $$ = make_loopfor(FOR,$3,$5,$7,$9);}
+forloop : FOR LPARENT instr SEMICOLON expr SEMICOLON instr RPARENT instr { $$ = make_forloop($3,$5,$7,$9); }
 
 
 

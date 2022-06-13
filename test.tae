@@ -1,13 +1,7 @@
 {
-    var a : fkzep = 5 + 5;
+    for (x = 1; x; x = x+1) 
     {
-        jdpezjze = koeke;
+        a = 0;
     }
-    var b : fjzoierjg = "fjopz";
-    b = 6;
-    c = 2;
-
-    for(var x : int = 1; x < 5; x = x+1){
-
-    }
+    a = 5;
 }

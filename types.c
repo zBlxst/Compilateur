@@ -2,7 +2,7 @@
 #define TYPES_INCLUDED
 
 typedef struct prgm {
-    struct block *bl;
+    struct instr *ins;
 } prgm;
 
 typedef struct var {
@@ -19,21 +19,19 @@ typedef struct block {
     struct instrlist *insli;
 } block;
 
-typedef struct loopfor {
-  int type; // FOR
-  struct decl *d;
-  struct iexpr *i;
-  struct iexpr *i2;
-  struct block *bl;
-} loopfor;
+typedef struct forloop {
+  struct instr *init;
+  struct expr *cond;
+  struct instr *end;
+  struct instr *ins;
+} forloop;
 
 typedef struct instr {
     int type; // ASSIGN, DECL, BLOCK, SKIP
-    struct lvalue *lval;
-    struct expr *e;
+    struct assign *a;
     struct decl *d;
     struct block *bl;
-    struct loopfor *lf;
+    struct forloop *fl;
 } instr;
 
 typedef struct instrlist {
@@ -47,27 +45,22 @@ typedef struct decl {
     struct expr *init;
 } decl;
 
+typedef struct assign {
+    struct lvalue *lval;
+    struct expr *e;
+} assign;
+
 typedef struct expr {
-    int type; // VAR, IEXPR, SEXPR
+    int type; // VAR, INT, BOOL, STRING, PLUS, MINUS, TIMES, DIV, PARENTH
     struct var *v;
-    struct iexpr *i;
-    struct sexpr *s;
+    int intValue;
+    char *stringValue;
+    int boolValue;
+    struct expr *left;
+    struct expr *right;
+
 
 } expr;
-
-typedef struct iexpr {
-    int type; // PLUS, MINUS, STAR, DIV, INT, LPARENT
-    struct iexpr *left;
-    struct iexpr *right;
-    int value;
-} iexpr;
-
-typedef struct sexpr {
-    int type; // PLUS, STRING
-    struct sexpr *left;
-    struct sexpr *right;
-    char *value;
-} sexpr;
 
 
 #endif
