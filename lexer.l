@@ -39,6 +39,7 @@ DIGIT [0-9]
 "/"	        { return DIV;   }
 
 "func"      { return FUNC;  }
+"for"       { return FOR;   }
 
 
 {DIGIT}+	{ yylval.n = atoi(yytext); return INT; }

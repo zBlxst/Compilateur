@@ -12,7 +12,7 @@ void print_var(var *v);
 void print_instr(instr *ins, int indent);
 void print_instrlist(instrlist *insli, int indent);
 void print_lvalue(lvalue *lval);
-void print_iexpr(iexpr *i); 
+void print_iexpr(iexpr *i);
 void print_sexpr(sexpr *s);
 
 void print_indent(int indent) {
@@ -34,6 +34,18 @@ void print_block(block *bl, int indent) {
             printf("}\n");
             break;
     }
+}
+
+void print_loopfor(loopfor *lf, int indent){
+  print_indent(indent);
+  printf("for(");
+  print_decl(lf->d);
+  printf(";");
+  print_iexpr(lf->i);
+  printf(";");
+  print_iexpr(lf->i2);
+  printf(")");
+  print_block(lf->bl,indent);
 }
 
 void print_decl(decl *d) {
@@ -76,6 +88,9 @@ void print_instr(instr *ins, int indent) {
             break;
         case BLOCK:
             print_block(ins->bl, indent);
+            break;
+        case FOR:
+            print_loopfor(ins->lf, indent);
             break;
         case SKIP:
             break;
@@ -130,8 +145,8 @@ void print_iexpr(iexpr *i) {
             print_iexpr(i->left);
             printf(")");
             break;
-        
-    } 
+
+    }
 }
 
 void print_sexpr(sexpr *s) {
@@ -142,7 +157,7 @@ void print_sexpr(sexpr *s) {
             printf(" + ");
             print_sexpr(s->right);
             break;
-        
+
         case STRING:
             printf("%s", s->value);
     }
@@ -151,4 +166,3 @@ void print_sexpr(sexpr *s) {
 
 
 #endif
-

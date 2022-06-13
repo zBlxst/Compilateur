@@ -16,9 +16,16 @@ typedef struct lvalue {
 
 typedef struct block {
     int type; // INSTR, CLASS
-    struct instrlist *insli; 
+    struct instrlist *insli;
 } block;
 
+typedef struct loopfor {
+  int type; // FOR
+  struct decl *d;
+  struct iexpr *i;
+  struct iexpr *i2;
+  struct block *bl;
+} loopfor;
 
 typedef struct instr {
     int type; // ASSIGN, DECL, BLOCK, SKIP
@@ -26,6 +33,7 @@ typedef struct instr {
     struct expr *e;
     struct decl *d;
     struct block *bl;
+    struct loopfor *lf;
 } instr;
 
 typedef struct instrlist {
@@ -63,4 +71,3 @@ typedef struct sexpr {
 
 
 #endif
-

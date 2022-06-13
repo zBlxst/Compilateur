@@ -1,7 +1,7 @@
 %locations
 
 %{
-    
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,7 +11,7 @@
 
 int yylex();
 void yyerror();
-    
+
 ///////////////////////////////////////////////////////////////////
 
 prgm *program;
@@ -81,21 +81,36 @@ lvalue* make_lvalue(int type, var *v) {
     return l;
 }
 
-instr* make_instr(int type, lvalue *l, expr *e, decl *d, block *bl) {
+instr* make_instr(int type, lvalue *l, expr *e, decl *d, block *bl, loopfor *lf) {
     instr *ins = malloc(sizeof(instr));
     ins->type = type;
     ins->lval = l;
     ins->e = e;
     ins->d = d;
     ins->bl = bl;
+    if(ins->lf != NULL){
+    printf("yo");
+    }
+    ins->lf = lf;
     return ins;
 }
 
 instrlist* make_instrlist(instr *ins, instrlist *next) {
+    printf("yo");
     instrlist *insli = malloc(sizeof(instrlist));
     insli->ins = ins;
     insli->next = next;
     return insli;
+}
+
+loopfor* make_loopfor(int type, decl *d, iexpr *i, iexpr *i2, block *bl){
+    loopfor *lf = malloc(sizeof(loopfor));
+    lf->type = type;
+    lf->d = d;
+    lf->i = i;
+    lf->i2 = i2;
+    lf->bl = bl;
+    return lf;
 }
 
 
@@ -118,6 +133,7 @@ instrlist* make_instrlist(instr *ins, instrlist *next) {
     instrlist *insli;
     sexpr *se;
     block *bl;
+    loopfor *lf;
 
 
     // ...
@@ -133,10 +149,11 @@ instrlist* make_instrlist(instr *ins, instrlist *next) {
 %type <insli> instrlist
 %type <se> sexpr
 %type <bl> block
+%type <lf> loopfor
 
 
 %token IEXPR SEXPR DECL INSTR BLOCK // Pour faire des constantes de préprocesseur pour les int type
-%token VAR IF THEN ELSE ASSIGN EQ NEQ LE LT GE GT LPARENT RPARENT LBRACK RBRACK DOUBLEPOINT OR AND NOT PLUS STAR MINUS DIV FUNC SEMICOLON SKIP
+%token VAR IF THEN ELSE ASSIGN EQ NEQ LE LT GE GT LPARENT RPARENT LBRACK RBRACK DOUBLEPOINT OR AND NOT PLUS STAR MINUS DIV FUNC FOR SEMICOLON SKIP
 %token <n> INT
 %token <s> IDENT
 %token <str> STRING
@@ -155,12 +172,13 @@ prgm : block                                 { program = make_prgm($1);         
 
 decl : VAR IDENT DOUBLEPOINT IDENT ASSIGN expr { $$ = make_decl($2,$4,$6);                 }
 
-instrlist :                                    { instr *skip = make_instr(SKIP, NULL, NULL, NULL, NULL); $$ = make_instrlist(skip, NULL); }
+instrlist :                                    { instr *skip = make_instr(SKIP, NULL, NULL, NULL, NULL, NULL); $$ = make_instrlist(skip, NULL); }
     | instr instrlist                      { $$ = make_instrlist($1, $2);                 }
 
-instr : block                               { $$ = make_instr(BLOCK, NULL, NULL, NULL, $1); }
-    | lvalue ASSIGN expr SEMICOLON          { $$ = make_instr(ASSIGN, $1, $3, NULL, NULL);             }
-    | decl SEMICOLON                        { $$ = make_instr(DECL, NULL, NULL, $1, NULL);      }
+instr : block                               { $$ = make_instr(BLOCK, NULL, NULL, NULL, $1,NULL); }
+    | lvalue ASSIGN expr SEMICOLON          { $$ = make_instr(ASSIGN, $1, $3, NULL, NULL,NULL);             }
+    | decl SEMICOLON                        { $$ = make_instr(DECL, NULL, NULL, $1, NULL, NULL);      }
+    | loopfor                               { $$ = make_instr(FOR,NULL,NULL,NULL,NULL,$1);}
 
 lvalue : var                                { $$ = make_lvalue(VAR, $1);                  }
 
@@ -182,6 +200,8 @@ iexpr : iexpr PLUS iexpr                    { $$ = make_iexpr(PLUS, $1, $3, 0); 
 sexpr : sexpr PLUS sexpr 					{ $$ = make_sexpr(PLUS, $1, $3, 0); }
     | STRING                                { $$ = make_sexpr(STRING, NULL, NULL, $1);  }
 
+loopfor : FOR LPARENT decl SEMICOLON iexpr SEMICOLON iexpr RPARENT block { $$ = make_loopfor(FOR,$3,$5,$7,$9);}
+
 
 
 %%
@@ -200,7 +220,7 @@ void yyerror(char *s)
 ///////////////////////////////////////////////////////////
 
 int main(int argc, char **argv) {
-    if (argc <= 1) { 
+    if (argc <= 1) {
         yyerror("no file specified"); exit(1);
     }
 
@@ -212,6 +232,3 @@ int main(int argc, char **argv) {
 	}
 	return 0;
 }
-
-
-

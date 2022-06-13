@@ -4,6 +4,10 @@
         jdpezjze = koeke;
     }
     var b : fjzoierjg = "fjopz";
-    b = 6; 
+    b = 6;
     c = 2;
+
+    for(var x : int = 1; x < 5; x = x+1){
+
+    }
 }
