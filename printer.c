@@ -14,6 +14,7 @@ void print_instrlist(instrlist *insli, int indent);
 void print_lvalue(lvalue *lval);
 void print_forloop(forloop *lf, int indent);
 void print_assign(assign *a);
+void print_whileloop(whileloop *wl, int indent);
 
 void print_indent(int indent) {
     for (int i = 0; i < indent; i++) printf("\t");
@@ -44,8 +45,16 @@ void print_forloop(forloop *lf, int indent){
     print_expr(lf->cond);
     printf("; ");
     print_instr(lf->end, 0, 1);
-    printf(")");
+    printf(")\n");
     print_instr(lf->ins, indent, 0);
+}
+
+void print_whileloop(whileloop *wl, int indent) {
+    print_indent(indent);
+    printf("while(");
+    print_expr(wl->cond);
+    printf(")\n");
+    print_instr(wl->ins, indent, 0);
 }
 
 void print_decl(decl *d) {
@@ -127,6 +136,8 @@ void print_instr(instr *ins, int indent, int isInStruct) {
         case FOR:
             print_forloop(ins->fl, indent);
             break;
+        case WHILE:
+            print_whileloop(ins->wl, indent);
         case SKIP:
             break;
     }

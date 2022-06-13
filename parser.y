@@ -73,13 +73,14 @@ assign* make_assign(lvalue *lval, expr *e) {
     return a;
 }
 
-instr* make_instr(int type, assign *a, decl *d, block *bl, forloop *fl) {
+instr* make_instr(int type, assign *a, decl *d, block *bl, forloop *fl, whileloop *wl) {
     instr *ins = malloc(sizeof(instr));
     ins->type = type;
     ins->a = a;
     ins->d = d;
     ins->bl = bl;
     ins->fl = fl;
+    ins->wl = wl;
     return ins;
 }
 
@@ -91,13 +92,19 @@ instrlist* make_instrlist(instr *ins, instrlist *next) {
 }
 
 forloop* make_forloop(instr *init, expr *cond, instr *end, instr *ins){
-    printf("for loop\n");
     forloop *fl = malloc(sizeof(forloop));
     fl->init = init;
     fl->cond = cond;
     fl->end = end;
     fl->ins = ins;
     return fl;
+}
+
+whileloop* make_whileloop(expr *cond, instr *ins) {
+    whileloop *wl = malloc(sizeof(whileloop));
+    wl->cond = cond;
+    wl->ins = ins;
+    return wl;
 }
 
 
@@ -119,6 +126,7 @@ forloop* make_forloop(instr *init, expr *cond, instr *end, instr *ins){
     instrlist *insli;
     block *bl;
     forloop *fl;
+    whileloop *wl;
     assign *a;
 
 
@@ -135,10 +143,12 @@ forloop* make_forloop(instr *init, expr *cond, instr *end, instr *ins){
 %type <insli> instrlist
 %type <bl> block
 %type <fl> forloop
+%type <wl> whileloop
 %type <a> assign
 
+
 %token DECL INSTR BLOCK BOOL PARENTH // Pour faire des constantes de préprocesseur pour les int type
-%token VAR IF THEN ELSE ASSIGN EQ NEQ LE LT GE GT LPARENT RPARENT LBRACK RBRACK DOUBLEPOINT OR AND NOT PLUS STAR MINUS DIV FUNC FOR SEMICOLON SKIP
+%token VAR IF THEN ELSE ASSIGN EQ NEQ LE LT GE GT LPARENT RPARENT LBRACK RBRACK DOUBLEPOINT OR AND NOT PLUS STAR MINUS DIV FUNC FOR WHILE SEMICOLON SKIP
 %token <n> INT
 %token <s> IDENT
 %token <str> STRING
@@ -157,14 +167,16 @@ prgm : instr                                 { program = make_prgm($1);         
 
 decl : VAR IDENT DOUBLEPOINT IDENT ASSIGN expr { $$ = make_decl($2,$4,$6);                 }
 
-instrlist :                                    { instr *skip = make_instr(SKIP, NULL, NULL, NULL, NULL); $$ = make_instrlist(skip, NULL); }
-    | forloop instrlist                     {instr *ins = make_instr(FOR, NULL, NULL, NULL, $1); $$ = make_instrlist(ins, $2); }
+instrlist :                                    { instr *skip = make_instr(SKIP, NULL, NULL, NULL, NULL, NULL); $$ = make_instrlist(skip, NULL); }
+    | forloop instrlist                     {instr *ins = make_instr(FOR, NULL, NULL, NULL, $1, NULL); $$ = make_instrlist(ins, $2); }
+    | whileloop instrlist                   {instr *ins = make_instr(WHILE, NULL, NULL, NULL, NULL, $1); $$ = make_instrlist(ins, $2); }
     | instr SEMICOLON instrlist                      { $$ = make_instrlist($1, $3);                 }
 
-instr : block                               { $$ = make_instr(BLOCK, NULL, NULL, $1,NULL); }
-    | assign                                { $$ = make_instr(ASSIGN, $1, NULL, NULL,NULL);             }
-    | decl                                  { $$ = make_instr(DECL, NULL, $1, NULL, NULL);      }
-    | forloop                               { $$ = make_instr(FOR, NULL, NULL, NULL, $1);}
+instr : block                               { $$ = make_instr(BLOCK, NULL, NULL, $1,NULL, NULL); }
+    | assign                                { $$ = make_instr(ASSIGN, $1, NULL, NULL,NULL, NULL);             }
+    | decl                                  { $$ = make_instr(DECL, NULL, $1, NULL, NULL, NULL);      }
+    | forloop                               { $$ = make_instr(FOR, NULL, NULL, NULL, $1, NULL);}
+    | whileloop                             { $$ = make_instr(WHILE, NULL, NULL, NULL, NULL, $1);}
 
 assign :  lvalue ASSIGN expr                { $$ = make_assign($1, $3); }
 
@@ -183,7 +195,7 @@ expr : var                                  { $$ = make_expr(VAR, $1, 0, NULL, 0
     | expr DIV expr                         { $$ = make_expr(DIV, NULL, 0, NULL, 0, $1, $3);       }
     | LPARENT expr RPARENT                  { $$ = make_expr(PARENTH, NULL, 0, NULL, 0, $2, NULL); }
 
-
+whileloop : WHILE LPARENT expr RPARENT instr { $$ = make_whileloop($3, $5); }
 forloop : FOR LPARENT instr SEMICOLON expr SEMICOLON instr RPARENT instr { $$ = make_forloop($3,$5,$7,$9); }
 
 

@@ -40,6 +40,7 @@ DIGIT [0-9]
 
 "func"      { return FUNC;  }
 "for"       { return FOR;   }
+"while"     { return WHILE; }
 
 
 {DIGIT}+	{ yylval.n = atoi(yytext); return INT; }

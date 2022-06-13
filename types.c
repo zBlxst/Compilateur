@@ -20,18 +20,24 @@ typedef struct block {
 } block;
 
 typedef struct forloop {
-  struct instr *init;
-  struct expr *cond;
-  struct instr *end;
-  struct instr *ins;
+    struct instr *init;
+    struct expr *cond;
+    struct instr *end;
+    struct instr *ins;
 } forloop;
 
+typedef struct whileloop {
+    struct expr *cond;
+    struct instr *ins;
+} whileloop;
+
 typedef struct instr {
-    int type; // ASSIGN, DECL, BLOCK, SKIP
+    int type; // ASSIGN, DECL, BLOCK, SKIP, FOR, WHILE
     struct assign *a;
     struct decl *d;
     struct block *bl;
     struct forloop *fl;
+    struct whileloop *wl;
 } instr;
 
 typedef struct instrlist {
