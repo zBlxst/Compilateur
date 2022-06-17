@@ -15,6 +15,7 @@ void print_lvalue(lvalue *lval);
 void print_forloop(forloop *lf, int indent);
 void print_assign(assign *a);
 void print_whileloop(whileloop *wl, int indent);
+void print_ifinstr(ifinstr *ifins, int indent);
 
 void print_indent(int indent) {
     for (int i = 0; i < indent; i++) printf("\t");
@@ -57,6 +58,19 @@ void print_whileloop(whileloop *wl, int indent) {
     print_instr(wl->ins, indent, 0);
 }
 
+void print_ifinstr(ifinstr *ifins, int indent) {
+    print_indent(indent);
+    printf("if(");
+    print_expr(ifins->cond);
+    printf(")\n");
+    print_instr(ifins->yes, indent, 0);
+    if (ifins->no != NULL) {
+        print_indent(indent);
+        printf("else\n");
+        print_instr(ifins->no, indent, 0);
+    }
+}
+
 void print_decl(decl *d) {
     printf("var %s : %s = ", d->name, d->type);
     print_expr(d->init);
@@ -96,6 +110,50 @@ void print_expr(expr *e) {
             printf(" / ");
             print_expr(e->right);
             break;
+        case LE:
+            print_expr(e->left);
+            printf(" <= ");
+            print_expr(e->right);
+            break;        
+        case LT:
+            print_expr(e->left);
+            printf(" < ");
+            print_expr(e->right);
+            break;
+        case GT:
+            print_expr(e->left);
+            printf(" > ");
+            print_expr(e->right);
+            break;
+        case GE:
+            print_expr(e->left);
+            printf(" >= ");
+            print_expr(e->right);
+            break;
+        case EQ:
+            print_expr(e->left);
+            printf(" == ");
+            print_expr(e->right);
+            break;        
+        case NEQ:
+            print_expr(e->left);
+            printf(" != ");
+            print_expr(e->right);
+            break;
+        case OR:
+            print_expr(e->left);
+            printf(" || ");
+            print_expr(e->right);
+            break;
+        case AND:
+            print_expr(e->left);
+            printf(" && ");
+            print_expr(e->right);
+            break;
+        case NOT:
+            printf("!");
+            print_expr(e->left);
+            break;        
         case PARENTH:
             printf("(");
             print_expr(e->left);
@@ -138,7 +196,12 @@ void print_instr(instr *ins, int indent, int isInStruct) {
             break;
         case WHILE:
             print_whileloop(ins->wl, indent);
+            break;
+        case IF:
+            print_ifinstr(ins->ifins, indent);
+            break;
         case SKIP:
+            //printf("skip;\n");
             break;
     }
 }

@@ -31,13 +31,20 @@ typedef struct whileloop {
     struct instr *ins;
 } whileloop;
 
+typedef struct ifinstr {
+    struct expr *cond;
+    struct instr *yes;
+    struct instr *no;
+} ifinstr;
+
 typedef struct instr {
-    int type; // ASSIGN, DECL, BLOCK, SKIP, FOR, WHILE
+    int type; // ASSIGN, DECL, BLOCK, SKIP, FOR, WHILE, IF
     struct assign *a;
     struct decl *d;
     struct block *bl;
     struct forloop *fl;
     struct whileloop *wl;
+    struct ifinstr *ifins;
 } instr;
 
 typedef struct instrlist {
@@ -57,15 +64,13 @@ typedef struct assign {
 } assign;
 
 typedef struct expr {
-    int type; // VAR, INT, BOOL, STRING, PLUS, MINUS, TIMES, DIV, PARENTH
+    int type; // VAR, INT, BOOL, STRING, PLUS, MINUS, TIMES, DIV, LE, LT, GE, GT, OR, AND, NOT, PARENTH
     struct var *v;
     int intValue;
     char *stringValue;
     int boolValue;
     struct expr *left;
     struct expr *right;
-
-
 } expr;
 
 
