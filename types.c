@@ -9,6 +9,12 @@ typedef struct var {
     char *name;
 } var;
 
+typedef struct typ {
+    int type; // IDENT, PTR
+    char *name;
+    struct typ *p;
+} typ;
+
 typedef struct lvalue {
     int type; // VAR, DOT
     struct var *v;
@@ -38,8 +44,8 @@ typedef struct ifinstr {
 } ifinstr;
 
 typedef struct arg {
-    char *name;
-    char *type;
+    struct var *v;
+    struct typ *t;
 } arg;
 
 typedef struct arglist {
@@ -50,20 +56,20 @@ typedef struct arglist {
 typedef struct function {
     char *name;
     struct arglist *args;
-    char *type;
+    struct typ *type;
     struct instr *ins;
 } function;
 
 
 typedef struct attrib {
-    char *name;
-    char *type;
+    struct var *v;
+    struct typ *t;
 } attrib;
 
 typedef struct method {
     char *name;
     struct arglist *args;
-    char *type;
+    struct typ *type;
     struct instr *ins;
 } method;
 

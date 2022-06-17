@@ -1,6 +1,6 @@
 class a {
-    var c : int;
-    var d : string;
+    var c : *int;
+    var d : *string;
 
     func f (fjpze : jfzpe) : unit {
         a = 5;

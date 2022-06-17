@@ -59,6 +59,14 @@ var* make_var(char *name) {
     return v;
 }
 
+typ* make_typ(int type, char *name, typ *p) {
+    typ *t = malloc(sizeof(typ));
+    t->type = type;
+    t->name = name;
+    t->p = p;
+    return t;
+}
+
 lvalue* make_lvalue(int type, var *v) {
     lvalue *l = malloc(sizeof(lvalue));
     l->type = type;
@@ -116,10 +124,10 @@ ifinstr* make_ifinstr(expr *cond, instr *yes, instr *no) {
     return ifins;
 }
 
-arg* make_arg(char *name, char *type) {
+arg* make_arg(var *v, typ *t) {
     arg *a = malloc(sizeof(arg));
-    a->name = name;
-    a->type = type;
+    a->v = v;
+    a->t = t;
     return a;
 }
 
@@ -130,7 +138,7 @@ arglist* make_arglist(arg *a, arglist *next) {
     return argl;
 }
 
-function* make_function(char *name, arglist *argli, char *type, instr *ins) {
+function* make_function(char *name, arglist *argli, typ *type, instr *ins) {
     function *f = malloc(sizeof(function));
     f->name = name;
     f->args = argli;
@@ -139,14 +147,14 @@ function* make_function(char *name, arglist *argli, char *type, instr *ins) {
     return f;
 }
 
-attrib* make_attrib(char *name, char *type) {
+attrib* make_attrib(var *v, typ *t) {
     attrib *att = malloc(sizeof(attrib));
-    att->name = name;
-    att->type = type;
+    att->v = v;
+    att->t = t;
     return att;
 }
 
-method* make_method(char *name, arglist *argli, char *type, instr *ins) {
+method* make_method(char *name, arglist *argli, typ *type, instr *ins) {
     method *meth = malloc(sizeof(method));
     meth->name = name;
     meth->args = argli;
@@ -190,6 +198,7 @@ class* make_class(char *name, attribormethodlist *aormli) {
     prgm *p;
     decl *d;
     var *v;
+    typ *t;
     lvalue *lval;
     instr *ins;
     instrlist *insli;
@@ -218,6 +227,7 @@ class* make_class(char *name, attribormethodlist *aormli) {
 %type <d> decl
 %type <e> expr
 %type <v> var
+%type <t> typ
 %type <lval> lvalue
 %type <ins> instr
 %type <insli> instrlist
@@ -238,7 +248,7 @@ class* make_class(char *name, attribormethodlist *aormli) {
 %type <cl> class
 
 
-%token DECL INSTR BLOCK BOOL PARENTH METHOD ATTRIB CLASS
+%token DECL INSTR BLOCK BOOL PARENTH METHOD ATTRIB CLASS PTR
 %token VAR IF THEN ELSE ASSIGN EQ NEQ LE LT GE GT LPARENT RPARENT LBRACK RBRACK DOUBLEPOINT OR AND NOT PLUS STAR MINUS DIV FUNC FOR WHILE SEMICOLON SKIP COMMA
 %token <n> INT
 %token <s> IDENT
@@ -261,10 +271,15 @@ prgm : class                                 { program = make_prgm($1);         
 lvalue : var                                { $$ = make_lvalue(VAR, $1);                  }
 var : IDENT                                 { $$ = make_var($1);                           }
 
+typ : IDENT                                 { $$ = make_typ(IDENT, $1, NULL); }
+    | STAR typ                              { $$ = make_typ(PTR, NULL, $2); }
 
-attrib : VAR IDENT DOUBLEPOINT IDENT SEMICOLON    { $$ = make_attrib($2, $4); }
-method : FUNC IDENT LPARENT arglist RPARENT DOUBLEPOINT IDENT instr { $$ = make_method($2, $4, $7, $8);}
-    | FUNC IDENT DOUBLEPOINT IDENT instr { $$ = make_method($2, NULL, $4, $5);}
+
+
+
+attrib : VAR var DOUBLEPOINT typ SEMICOLON    { $$ = make_attrib($2, $4); }
+method : FUNC IDENT LPARENT arglist RPARENT DOUBLEPOINT typ instr { $$ = make_method($2, $4, $7, $8);}
+    | FUNC IDENT DOUBLEPOINT typ instr { $$ = make_method($2, NULL, $4, $5);}
 attribormethod : attrib                 { $$ = make_attribormethod(ATTRIB, $1, NULL); }
     | method                            { $$ = make_attribormethod(METHOD, NULL, $1); }
 
@@ -274,12 +289,12 @@ attribormethodlist : attribormethod       { $$ = make_attribormethodlist($1, NUL
 class : CLASS IDENT LBRACK attribormethodlist RBRACK { $$ = make_class($2, $4); }
 
 
-arg : IDENT DOUBLEPOINT IDENT               { $$ = make_arg($1, $3); }
+arg : var DOUBLEPOINT typ               { $$ = make_arg($1, $3); }
 arglist :                               { $$ = NULL;} 
     | arg                               { $$ = make_arglist($1, NULL);}
     | arg COMMA arglist                 { $$ = make_arglist($1, $3); }
-function : FUNC IDENT LPARENT arglist RPARENT DOUBLEPOINT IDENT instr { $$ = make_function($2, $4, $7, $8);}
-    | FUNC IDENT DOUBLEPOINT IDENT instr { $$ = make_function($2, NULL, $4, $5);}
+function : FUNC IDENT LPARENT arglist RPARENT DOUBLEPOINT typ instr { $$ = make_function($2, $4, $7, $8);}
+    | FUNC IDENT DOUBLEPOINT typ instr { $$ = make_function($2, NULL, $4, $5);}
 
 expr : var                                  { $$ = make_expr(VAR, $1, 0, NULL, 0, NULL, NULL);               }
     | INT                                   { $$ = make_expr(INT, NULL, $1, NULL, 0, NULL, NULL);               }

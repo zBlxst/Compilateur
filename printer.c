@@ -9,6 +9,7 @@ void print_block(block *bl, int indent);
 void print_decl(decl *d);
 void print_expr(expr *e);
 void print_var(var *v);
+void print_typ(typ *t);
 void print_instr(instr *ins, int indent, int isInsStruct);
 void print_instrlist(instrlist *insli, int indent);
 void print_lvalue(lvalue *lval);
@@ -37,7 +38,11 @@ void print_prgm(prgm *p) {
 }
 
 void print_attrib(attrib *att) {
-    printf("\tvar %s : %s;", att->name, att->type);
+    printf("\tvar ");
+    print_var(att->v);
+    printf(" : ");
+    print_typ(att->t);
+    printf(";");
 }
 
 void print_method(method *meth) {
@@ -45,7 +50,9 @@ void print_method(method *meth) {
     if (meth->args != NULL) {
         print_arglist(meth->args);
     }
-    printf(") : %s\n", meth->type);
+    printf(") : ");
+    print_typ(meth->type);
+    printf("\n");
     print_instr(meth->ins, 1, 0);    
 }
 
@@ -81,7 +88,9 @@ void print_class(class *cl) {
 
 
 void print_arg(arg *a) {
-    printf("%s : %s", a->name, a->type);
+    print_var(a->v);
+    printf(" : ");
+    print_typ(a->t);
 }
 
 void print_arglist(arglist *argli) {
@@ -97,7 +106,9 @@ void print_function(function *f) {
     if (f->args != NULL) {
         print_arglist(f->args);
     }
-    printf(") : %s\n", f->type);
+    printf(") : ");
+    print_typ(f->type);
+    printf("\n");
     print_instr(f->ins, 0, 0);    
 }
 
@@ -239,6 +250,18 @@ void print_expr(expr *e) {
 
 void print_var(var *v) {
     printf("%s", v->name);
+}
+
+void print_typ(typ *t) {
+    switch (t->type) {
+        case IDENT:
+            printf("%s", t->name);
+            break;
+        case PTR:
+            printf("*");
+            print_typ(t->p);
+            break;
+    }
 }
 
 void print_assign(assign *a) {
