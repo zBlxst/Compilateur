@@ -40,6 +40,7 @@ DIGIT [0-9]
 "/"	        { return DIV;   }
 
 "func"      { return FUNC;  }
+"class"     { return CLASS; }
 "for"       { return FOR;   }
 "while"     { return WHILE; }
 

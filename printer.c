@@ -21,14 +21,64 @@ void print_arg(arg *a);
 void print_arglist(arglist *argli);
 void print_function(function *f);
 
+void print_attrib(attrib *att);
+void print_method(method *meth);
+void print_attribormethod(attribormethod *aorm);
+void print_attribormethodlist(attribormethodlist *aormli);
+void print_class(class *cl);
+
 void print_indent(int indent) {
     for (int i = 0; i < indent; i++) printf("\t");
 }
 
 
 void print_prgm(prgm *p) {
-    print_function(p->f);
+    print_class(p->cl);
 }
+
+void print_attrib(attrib *att) {
+    printf("\tvar %s : %s;", att->name, att->type);
+}
+
+void print_method(method *meth) {
+    printf("\tfunc %s(", meth->name);
+    if (meth->args != NULL) {
+        print_arglist(meth->args);
+    }
+    printf(") : %s\n", meth->type);
+    print_instr(meth->ins, 1, 0);    
+}
+
+void print_attribormethod(attribormethod *aorm) {
+    switch (aorm->type)
+    {
+    case ATTRIB:
+        print_attrib(aorm->att);
+        break;
+    case METHOD:
+        print_method(aorm->meth);
+        break;
+    }
+}
+
+void print_attribormethodlist(attribormethodlist *aormli) {
+    print_attribormethod(aormli->aorm);
+    printf("\n");
+    if (aormli->next != NULL) {
+        print_attribormethodlist(aormli->next);
+    }
+}
+
+void print_class(class *cl) {
+    printf("class %s\n{\n", cl->name);
+    if (cl->aormli != NULL) {
+        print_attribormethodlist(cl->aormli);
+    }
+    printf("}\n");
+}
+
+
+
 
 void print_arg(arg *a) {
     printf("%s : %s", a->name, a->type);

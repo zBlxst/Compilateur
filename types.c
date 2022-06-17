@@ -2,7 +2,7 @@
 #define TYPES_INCLUDED
 
 typedef struct prgm {
-    struct function *f;
+    struct class *cl;
 } prgm;
 
 typedef struct var {
@@ -53,6 +53,35 @@ typedef struct function {
     char *type;
     struct instr *ins;
 } function;
+
+
+typedef struct attrib {
+    char *name;
+    char *type;
+} attrib;
+
+typedef struct method {
+    char *name;
+    struct arglist *args;
+    char *type;
+    struct instr *ins;
+} method;
+
+typedef struct attribormethod {
+    int type; // ATTRIB, METHOD
+    struct attrib *att;
+    struct method *meth;
+} attribormethod;
+
+typedef struct attribormethodlist {
+    struct attribormethod *aorm;
+    struct attribormethodlist *next;
+} attribormethodlist;
+
+typedef struct class {
+    char *name;
+    struct attribormethodlist *aormli;
+} class;
 
 typedef struct instr {
     int type; // ASSIGN, DECL, BLOCK, SKIP, FOR, WHILE, IF

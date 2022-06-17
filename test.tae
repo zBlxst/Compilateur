@@ -1,3 +1,9 @@
-func a : Unit {
-    a = 5;
+class a {
+    var c : int;
+    var d : string;
+
+    func f (fjpze : jfzpe) : unit {
+        a = 5;
+        a = a * 2;
+    }
 }

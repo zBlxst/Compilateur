@@ -20,9 +20,9 @@ prgm *program;
 Functions to instanciate data structures
 */
 
-prgm* make_prgm (function *f) {
+prgm* make_prgm (class *cl) {
     prgm *p = malloc(sizeof(prgm));
-    p->f = f;
+    p->cl = cl;
     return p;
 }
 
@@ -139,6 +139,43 @@ function* make_function(char *name, arglist *argli, char *type, instr *ins) {
     return f;
 }
 
+attrib* make_attrib(char *name, char *type) {
+    attrib *att = malloc(sizeof(attrib));
+    att->name = name;
+    att->type = type;
+    return att;
+}
+
+method* make_method(char *name, arglist *argli, char *type, instr *ins) {
+    method *meth = malloc(sizeof(method));
+    meth->name = name;
+    meth->args = argli;
+    meth->type = type;
+    meth->ins = ins;
+    return meth;
+}
+
+attribormethod* make_attribormethod(int type, attrib *att, method *meth) {
+    attribormethod *aorm = malloc(sizeof(attribormethod));
+    aorm->type = type;
+    aorm->att = att;
+    aorm->meth = meth;
+    return aorm;
+}
+
+attribormethodlist* make_attribormethodlist(attribormethod *aorm, attribormethodlist *next) {
+    attribormethodlist *aormlist = malloc(sizeof(attribormethodlist));
+    aormlist->aorm = aorm;
+    aormlist->next = next;
+    return aormlist;
+}
+
+class* make_class(char *name, attribormethodlist *aormli) {
+    class *cl = malloc(sizeof(class));
+    cl->name = name;
+    cl->aormli = aormli;
+    return cl;
+}
 
 
 
@@ -166,6 +203,12 @@ function* make_function(char *name, arglist *argli, char *type, instr *ins) {
     arglist *arli;
     function *f;
 
+    attrib *att;
+    method *meth;
+    attribormethod *aorm;
+    attribormethodlist *aormli;
+    class *cl;
+
 
     // ...
 }
@@ -188,8 +231,14 @@ function* make_function(char *name, arglist *argli, char *type, instr *ins) {
 %type <arli> arglist
 %type <f> function
 
+%type <att> attrib
+%type <meth> method
+%type <aorm> attribormethod
+%type <aormli> attribormethodlist
+%type <cl> class
 
-%token DECL INSTR BLOCK BOOL PARENTH // Pour faire des constantes de préprocesseur pour les int type
+
+%token DECL INSTR BLOCK BOOL PARENTH METHOD ATTRIB CLASS
 %token VAR IF THEN ELSE ASSIGN EQ NEQ LE LT GE GT LPARENT RPARENT LBRACK RBRACK DOUBLEPOINT OR AND NOT PLUS STAR MINUS DIV FUNC FOR WHILE SEMICOLON SKIP COMMA
 %token <n> INT
 %token <s> IDENT
@@ -205,7 +254,25 @@ function* make_function(char *name, arglist *argli, char *type, instr *ins) {
 
 %%
 
-prgm : function                                 { program = make_prgm($1);                    }
+prgm : class                                 { program = make_prgm($1);                    }
+
+
+
+lvalue : var                                { $$ = make_lvalue(VAR, $1);                  }
+var : IDENT                                 { $$ = make_var($1);                           }
+
+
+attrib : VAR IDENT DOUBLEPOINT IDENT SEMICOLON    { $$ = make_attrib($2, $4); }
+method : FUNC IDENT LPARENT arglist RPARENT DOUBLEPOINT IDENT instr { $$ = make_method($2, $4, $7, $8);}
+    | FUNC IDENT DOUBLEPOINT IDENT instr { $$ = make_method($2, NULL, $4, $5);}
+attribormethod : attrib                 { $$ = make_attribormethod(ATTRIB, $1, NULL); }
+    | method                            { $$ = make_attribormethod(METHOD, NULL, $1); }
+
+attribormethodlist : attribormethod       { $$ = make_attribormethodlist($1, NULL); }
+    | attribormethod attribormethodlist   { $$ = make_attribormethodlist($1, $2); }
+
+class : CLASS IDENT LBRACK attribormethodlist RBRACK { $$ = make_class($2, $4); }
+
 
 arg : IDENT DOUBLEPOINT IDENT               { $$ = make_arg($1, $3); }
 arglist :                               { $$ = NULL;} 
@@ -213,11 +280,6 @@ arglist :                               { $$ = NULL;}
     | arg COMMA arglist                 { $$ = make_arglist($1, $3); }
 function : FUNC IDENT LPARENT arglist RPARENT DOUBLEPOINT IDENT instr { $$ = make_function($2, $4, $7, $8);}
     | FUNC IDENT DOUBLEPOINT IDENT instr { $$ = make_function($2, NULL, $4, $5);}
-
-
-lvalue : var                                { $$ = make_lvalue(VAR, $1);                  }
-var : IDENT                                 { $$ = make_var($1);                           }
-
 
 expr : var                                  { $$ = make_expr(VAR, $1, 0, NULL, 0, NULL, NULL);               }
     | INT                                   { $$ = make_expr(INT, NULL, $1, NULL, 0, NULL, NULL);               }
