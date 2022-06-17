@@ -2,7 +2,7 @@
 #define TYPES_INCLUDED
 
 typedef struct prgm {
-    struct instr *ins;
+    struct function *f;
 } prgm;
 
 typedef struct var {
@@ -36,6 +36,23 @@ typedef struct ifinstr {
     struct instr *yes;
     struct instr *no;
 } ifinstr;
+
+typedef struct arg {
+    char *name;
+    char *type;
+} arg;
+
+typedef struct arglist {
+    struct arg *a;
+    struct arglist *next;
+} arglist;
+
+typedef struct function {
+    char *name;
+    struct arglist *args;
+    char *type;
+    struct instr *ins;
+} function;
 
 typedef struct instr {
     int type; // ASSIGN, DECL, BLOCK, SKIP, FOR, WHILE, IF

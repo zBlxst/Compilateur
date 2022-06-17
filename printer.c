@@ -17,13 +17,38 @@ void print_assign(assign *a);
 void print_whileloop(whileloop *wl, int indent);
 void print_ifinstr(ifinstr *ifins, int indent);
 
+void print_arg(arg *a);
+void print_arglist(arglist *argli);
+void print_function(function *f);
+
 void print_indent(int indent) {
     for (int i = 0; i < indent; i++) printf("\t");
 }
 
 
 void print_prgm(prgm *p) {
-    print_instr(p->ins, 0, 0);
+    print_function(p->f);
+}
+
+void print_arg(arg *a) {
+    printf("%s : %s", a->name, a->type);
+}
+
+void print_arglist(arglist *argli) {
+    print_arg(argli->a);
+    if (argli->next != NULL) {
+        printf(", ");
+        print_arglist(argli->next);
+    }
+}
+
+void print_function(function *f) {
+    printf("func %s(", f->name);
+    if (f->args != NULL) {
+        print_arglist(f->args);
+    }
+    printf(") : %s\n", f->type);
+    print_instr(f->ins, 0, 0);    
 }
 
 void print_block(block *bl, int indent) {

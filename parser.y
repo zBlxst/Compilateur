@@ -20,9 +20,9 @@ prgm *program;
 Functions to instanciate data structures
 */
 
-prgm* make_prgm (instr *i) {
+prgm* make_prgm (function *f) {
     prgm *p = malloc(sizeof(prgm));
-    p->ins = i;
+    p->f = f;
     return p;
 }
 
@@ -116,6 +116,29 @@ ifinstr* make_ifinstr(expr *cond, instr *yes, instr *no) {
     return ifins;
 }
 
+arg* make_arg(char *name, char *type) {
+    arg *a = malloc(sizeof(arg));
+    a->name = name;
+    a->type = type;
+    return a;
+}
+
+arglist* make_arglist(arg *a, arglist *next) {
+    arglist *argl = malloc(sizeof(arglist));
+    argl->a = a;
+    argl->next = next;
+    return argl;
+}
+
+function* make_function(char *name, arglist *argli, char *type, instr *ins) {
+    function *f = malloc(sizeof(function));
+    f->name = name;
+    f->args = argli;
+    f->type = type;
+    f->ins = ins;
+    return f;
+}
+
 
 
 
@@ -139,6 +162,10 @@ ifinstr* make_ifinstr(expr *cond, instr *yes, instr *no) {
     ifinstr *ifins;
     assign *a;
 
+    arg *ar;
+    arglist *arli;
+    function *f;
+
 
     // ...
 }
@@ -157,9 +184,13 @@ ifinstr* make_ifinstr(expr *cond, instr *yes, instr *no) {
 %type <a> assign
 %type <ifins> ifinstr
 
+%type <ar> arg
+%type <arli> arglist
+%type <f> function
+
 
 %token DECL INSTR BLOCK BOOL PARENTH // Pour faire des constantes de préprocesseur pour les int type
-%token VAR IF THEN ELSE ASSIGN EQ NEQ LE LT GE GT LPARENT RPARENT LBRACK RBRACK DOUBLEPOINT OR AND NOT PLUS STAR MINUS DIV FUNC FOR WHILE SEMICOLON SKIP
+%token VAR IF THEN ELSE ASSIGN EQ NEQ LE LT GE GT LPARENT RPARENT LBRACK RBRACK DOUBLEPOINT OR AND NOT PLUS STAR MINUS DIV FUNC FOR WHILE SEMICOLON SKIP COMMA
 %token <n> INT
 %token <s> IDENT
 %token <str> STRING
@@ -174,30 +205,19 @@ ifinstr* make_ifinstr(expr *cond, instr *yes, instr *no) {
 
 %%
 
-prgm : instr                                 { program = make_prgm($1);                    }
+prgm : function                                 { program = make_prgm($1);                    }
 
-decl : VAR IDENT DOUBLEPOINT IDENT ASSIGN expr { $$ = make_decl($2,$4,$6);                 }
+arg : IDENT DOUBLEPOINT IDENT               { $$ = make_arg($1, $3); }
+arglist :                               { $$ = NULL;} 
+    | arg                               { $$ = make_arglist($1, NULL);}
+    | arg COMMA arglist                 { $$ = make_arglist($1, $3); }
+function : FUNC IDENT LPARENT arglist RPARENT DOUBLEPOINT IDENT instr { $$ = make_function($2, $4, $7, $8);}
+    | FUNC IDENT DOUBLEPOINT IDENT instr { $$ = make_function($2, NULL, $4, $5);}
 
-instrlist : forloop instrlist                     {instr *ins = make_instr(FOR, NULL, NULL, NULL, $1, NULL, NULL); $$ = make_instrlist(ins, $2); }
-    | whileloop instrlist                   {instr *ins = make_instr(WHILE, NULL, NULL, NULL, NULL, $1, NULL); $$ = make_instrlist(ins, $2); }
-    | ifinstr instrlist                     {instr *ins = make_instr(IF, NULL, NULL, NULL, NULL, NULL, $1); $$ = make_instrlist(ins, $2); }
-    | instr SEMICOLON instrlist                      { $$ = make_instrlist($1, $3);                 }
-    |                                       { instr *skip = make_instr(SKIP, NULL, NULL, NULL, NULL, NULL, NULL); $$ = make_instrlist(skip, NULL); }
-
-instr : block                               { $$ = make_instr(BLOCK, NULL, NULL, $1,NULL, NULL, NULL); }
-    | assign                                { $$ = make_instr(ASSIGN, $1, NULL, NULL,NULL, NULL, NULL);             }
-    | decl                                  { $$ = make_instr(DECL, NULL, $1, NULL, NULL, NULL, NULL);      }
-    | forloop                               { $$ = make_instr(FOR, NULL, NULL, NULL, $1, NULL, NULL);}
-    | whileloop                             { $$ = make_instr(WHILE, NULL, NULL, NULL, NULL, $1, NULL);}
-    | ifinstr                               { $$ = make_instr(IF, NULL, NULL, NULL, NULL, NULL, $1); }
-
-assign :  lvalue ASSIGN expr                { $$ = make_assign($1, $3); }
 
 lvalue : var                                { $$ = make_lvalue(VAR, $1);                  }
-
 var : IDENT                                 { $$ = make_var($1);                           }
 
-block : LBRACK instrlist RBRACK             { $$ = make_block(INSTR, $2);            }
 
 expr : var                                  { $$ = make_expr(VAR, $1, 0, NULL, 0, NULL, NULL);               }
     | INT                                   { $$ = make_expr(INT, NULL, $1, NULL, 0, NULL, NULL);               }
@@ -217,9 +237,25 @@ expr : var                                  { $$ = make_expr(VAR, $1, 0, NULL, 0
     | NOT expr                              { $$ = make_expr(NOT, NULL, 0, NULL, 0, $2, NULL);     }        
     | LPARENT expr RPARENT                  { $$ = make_expr(PARENTH, NULL, 0, NULL, 0, $2, NULL); }
 
+instrlist : forloop instrlist                     {instr *ins = make_instr(FOR, NULL, NULL, NULL, $1, NULL, NULL); $$ = make_instrlist(ins, $2); }
+    | whileloop instrlist                   {instr *ins = make_instr(WHILE, NULL, NULL, NULL, NULL, $1, NULL); $$ = make_instrlist(ins, $2); }
+    | ifinstr instrlist                     {instr *ins = make_instr(IF, NULL, NULL, NULL, NULL, NULL, $1); $$ = make_instrlist(ins, $2); }
+    | instr SEMICOLON instrlist                      { $$ = make_instrlist($1, $3);                 }
+    |                                       { instr *skip = make_instr(SKIP, NULL, NULL, NULL, NULL, NULL, NULL); $$ = make_instrlist(skip, NULL); }
+
+instr : block                               { $$ = make_instr(BLOCK, NULL, NULL, $1,NULL, NULL, NULL); }
+    | assign                                { $$ = make_instr(ASSIGN, $1, NULL, NULL,NULL, NULL, NULL);             }
+    | decl                                  { $$ = make_instr(DECL, NULL, $1, NULL, NULL, NULL, NULL);      }
+    | forloop                               { $$ = make_instr(FOR, NULL, NULL, NULL, $1, NULL, NULL);}
+    | whileloop                             { $$ = make_instr(WHILE, NULL, NULL, NULL, NULL, $1, NULL);}
+    | ifinstr                               { $$ = make_instr(IF, NULL, NULL, NULL, NULL, NULL, $1); }
+
+
+assign :  lvalue ASSIGN expr                { $$ = make_assign($1, $3); }
+decl : VAR IDENT DOUBLEPOINT IDENT ASSIGN expr { $$ = make_decl($2,$4,$6);                 }
+block : LBRACK instrlist RBRACK             { $$ = make_block(INSTR, $2);            }
 whileloop : WHILE LPARENT expr RPARENT instr { $$ = make_whileloop($3, $5); }
 forloop : FOR LPARENT instr SEMICOLON expr SEMICOLON instr RPARENT instr { $$ = make_forloop($3,$5,$7,$9); }
-
 ifinstr : IF LPARENT expr RPARENT instr ELSE instr { $$ = make_ifinstr($3, $5, $7); }
     | IF LPARENT expr RPARENT instr         { $$ = make_ifinstr($3, $5, NULL); }
 

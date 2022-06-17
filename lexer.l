@@ -22,6 +22,7 @@ DIGIT [0-9]
 ">"         { return GT;    }
 ":"         { return DOUBLEPOINT;    }
 ";"         { return SEMICOLON;      }
+","         { return COMMA; }
 
 "||"	    { return OR;    }
 "&&"	    { return AND;   }
